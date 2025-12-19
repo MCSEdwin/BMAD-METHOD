@@ -1,0 +1,82 @@
+# First Principles - Agent Cohort Assignments
+# Defines which agents fill Challenger, Defender, Builder, and Facilitator roles
+
+cohorts:
+  challengers:
+    description: "Agents who destroy assumptions aggressively"
+    agent_criteria:
+      primary:
+        - "test" # TEA: Quality mindset
+        - "quality" # QA roles
+        - "security" # Security analysts
+        - "risk" # Risk analysts
+        - "innovation" # Innovation strategists
+      fallback:
+        - "engineer" # Backend engineers (technical depth)
+        - "architect" # Technical architects (system thinking)
+
+    scoring:
+      role_match: 40
+      challenging_style: 30
+      technical_depth: 20
+      domain_expertise: 10
+
+    selection_count:
+      min: 2
+      ideal: 3
+      max: 4
+
+  defenders:
+    description: "Agents who provide evidence or concede gracefully"
+    agent_criteria:
+      primary:
+        - "architect" # Solution architects
+        - "product" # Product managers
+        - "engineer" # Backend engineers
+        - "data" # Data engineers
+      fallback:
+        - "frontend" # Frontend engineers
+        - "design" # UX/UI designers
+
+    scoring:
+      role_match: 40
+      evidence_based_thinking: 30
+      domain_expertise: 20
+      communication_clarity: 10
+
+    selection_count:
+      min: 2
+      ideal: 3
+      max: 4
+
+  builders:
+    description: "Agents who reconstruct solutions from fundamentals"
+    agent_criteria:
+      primary:
+        - "architect" # Solution architects (synthesis)
+        - "product" # Product managers (pragmatism)
+        - "engineer" # Engineers (implementation)
+        - "innovation" # Innovation strategists (creativity)
+      fallback:
+        - "design" # UX designers (user-centric)
+        - "data" # Data engineers (evidence-based)
+
+    scoring:
+      role_match: 40
+      creative_thinking: 30
+      technical_feasibility: 20
+      pragmatism: 10
+
+    selection_count:
+      min: 2
+      ideal: 3
+      max: 4
+
+  facilitator:
+    description: "Orchestrator who renders evidence-based verdicts"
+    agent_criteria:
+      required:
+        - "bmad-master" # BMad Master is always facilitator
+
+    selection_count:
+      fixed: 1

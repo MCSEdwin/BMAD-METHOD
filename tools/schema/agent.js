@@ -184,6 +184,7 @@ function buildMenuItemSchema() {
       document: createNonEmptyString('agent.menu[].document').optional(),
       'ide-only': z.boolean().optional(),
       'web-only': z.boolean().optional(),
+      tags: z.array(createNonEmptyString('agent.menu[].tags[]')).optional(),
     })
     .strict()
     .superRefine((value, ctx) => {

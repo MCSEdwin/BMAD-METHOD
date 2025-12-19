@@ -76,7 +76,7 @@ class UI {
             { name: 'Compile Agents (Quick rebuild of all agent .md files)', value: 'compile' },
             { name: 'Cancel', value: 'cancel' },
           ],
-          default: 'quick-update',
+          default: 'update',
         },
       ]);
 
@@ -225,6 +225,8 @@ class UI {
     }
 
     CLIUtils.displaySection('Tool Integration', 'Select AI coding assistants and IDEs to configure');
+
+    console.log(chalk.dim('  💡 Use ↑↓ arrows to navigate, SPACEBAR to select, ENTER to confirm\n'));
 
     let answers;
     let userConfirmedNoTools = false;
@@ -446,6 +448,8 @@ class UI {
    */
   async selectModules(moduleChoices) {
     CLIUtils.displaySection('Module Selection', 'Choose the BMAD modules to install');
+
+    console.log(chalk.dim('  💡 Use ↑↓ arrows to navigate, SPACEBAR to select, ENTER to confirm\n'));
 
     const moduleAnswer = await inquirer.prompt([
       {

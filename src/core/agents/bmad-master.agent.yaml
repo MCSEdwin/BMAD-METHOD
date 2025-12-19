@@ -35,5 +35,21 @@ agent:
       workflow: "{project-root}/{bmad_folder}/core/workflows/party-mode/workflow.yaml"
       description: "Group chat with all agents"
 
+    - trigger: "six-hats"
+      workflow: "{project-root}/{bmad_folder}/core/workflows/six-hats/workflow.yaml"
+      description: "Multi-perspective analysis using Six Thinking Hats method"
+      tags:
+        - "recommended"
+        - "multi-agent"
+        - "analytical"
+
+    - trigger: "first-principles"
+      workflow: "{project-root}/{bmad_folder}/core/workflows/first-principles/workflow.yaml"
+      description: "Challenge assumptions and rebuild from fundamental truths"
+      tags:
+        - "recommended"
+        - "multi-agent"
+        - "analytical"
+
   # Empty prompts section (no custom prompts for this agent)
   prompts: []
