@@ -801,7 +801,6 @@ class UI {
         name: 'modules',
         message: 'Select modules to install:',
         choices: moduleChoices,
-        default: defaultSelections,
       },
     ]);
 
