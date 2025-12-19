@@ -1,0 +1,18 @@
+installation:
+  version: 6.0.0-alpha.12
+  installDate: 2025-12-12T06:31:56.943Z
+  lastUpdated: 2025-12-12T06:31:57.467Z
+modules:
+  - core
+  - bmb
+  - bmm
+ides:
+  - claude-code
+  - roo
+custom_agents:
+  - name: commit-poet
+    type: commit-poet
+    installed: 2025-12-12T06:31:57.419Z
+  - name: toolsmith
+    type: toolsmith
+    installed: 2025-12-12T06:31:57.467Z

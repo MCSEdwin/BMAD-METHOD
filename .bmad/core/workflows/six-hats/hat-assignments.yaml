@@ -1,0 +1,134 @@
+# Six Thinking Hats - Agent Hat Assignments
+# Defines which agents are assigned to each hat based on their role and expertise
+
+hats:
+  white:
+    description: "Facts, data, information - objective and neutral"
+    agent_criteria:
+      primary:
+        - "analyst"
+        - "data"
+        - "research"
+      fallback:
+        - "architect"
+        - "engineer"
+
+    scoring:
+      role_match: 40
+      analytical_thinking: 30
+      objectivity: 20
+      data_expertise: 10
+
+    selection_count:
+      min: 2
+      ideal: 3
+      max: 4
+
+  red:
+    description: "Emotions, feelings, intuition - gut reactions"
+    agent_criteria:
+      primary:
+        - "design"
+        - "ux"
+        - "product"
+        - "creative"
+      fallback:
+        - "pm"
+        - "innovation"
+
+    scoring:
+      role_match: 40
+      emotional_intelligence: 30
+      user_empathy: 20
+      intuition: 10
+
+    selection_count:
+      min: 2
+      ideal: 3
+      max: 4
+
+  black:
+    description: "Risks, problems, critical judgment - devil's advocate"
+    agent_criteria:
+      primary:
+        - "test"
+        - "quality"
+        - "security"
+        - "risk"
+      fallback:
+        - "architect"
+        - "engineer"
+
+    scoring:
+      role_match: 40
+      critical_thinking: 30
+      risk_awareness: 20
+      skepticism: 10
+
+    selection_count:
+      min: 2
+      ideal: 3
+      max: 4
+
+  yellow:
+    description: "Benefits, optimism, opportunities - positive thinking"
+    agent_criteria:
+      primary:
+        - "product"
+        - "pm"
+        - "innovation"
+        - "business"
+      fallback:
+        - "design"
+        - "architect"
+
+    scoring:
+      role_match: 40
+      optimistic_mindset: 30
+      opportunity_recognition: 20
+      value_focus: 10
+
+    selection_count:
+      min: 2
+      ideal: 3
+      max: 4
+
+  green:
+    description: "Creativity, alternatives, new ideas - brainstorming"
+    agent_criteria:
+      primary:
+        - "creative"
+        - "innovation"
+        - "design"
+      fallback:
+        - "architect"
+        - "engineer"
+        - "product"
+
+    scoring:
+      role_match: 40
+      creative_thinking: 30
+      ideation_ability: 20
+      lateral_thinking: 10
+
+    selection_count:
+      min: 2
+      ideal: 3
+      max: 4
+
+  blue:
+    description: "Process control, meta-thinking - facilitator"
+    agent_criteria:
+      required:
+        - "bmad-master"
+      fallback:
+        - "scrum-master"
+        - "product"
+
+    scoring:
+      role_match: 50
+      facilitation_skills: 30
+      synthesis_ability: 20
+
+    selection_count:
+      fixed: 1

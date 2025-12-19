@@ -1,0 +1,65 @@
+# First Principles Thinking - Multi-Agent Workflow
+name: "first-principles"
+description: "Challenge every assumption and rebuild solutions from fundamental truths using multi-agent Socratic questioning"
+author: "BMad"
+
+# Critical data sources
+agent_manifest: "{project-root}/.bmad/_cfg/agent-manifest.csv"
+agent_assignments: "{project-root}/.bmad/core/workflows/first-principles/agent-assignments.yaml"
+date: system-generated
+
+# Configuration
+phases:
+  - deconstruct # Challenge every assumption
+  - validate # Identify true fundamentals
+  - reconstruct # Rebuild from scratch
+
+challenge_intensity:
+  default: "aggressive"
+  options:
+    - gentle # For fragile teams or sensitive topics
+    - moderate # Balanced approach
+    - aggressive # Maximum skepticism (recommended)
+
+evidence_standards:
+  highest_tier:
+    - "laws of physics"
+    - "mathematical proof"
+    - "thermodynamic constraints"
+  high_tier:
+    - "economic laws (supply/demand)"
+    - "biological constraints"
+  medium_tier:
+    - "engineering constraints"
+    - "regulatory requirements"
+  low_tier:
+    - "industry conventions"
+    - "best practices"
+  insufficient:
+    - "everyone does it this way"
+    - "it's always been done like this"
+
+# Template for progressive checkpoint output
+template: "{project-root}/.bmad/core/workflows/first-principles/template.md"
+instructions: "{project-root}/.bmad/core/workflows/first-principles/instructions.md"
+
+# Exit conditions
+exit_triggers:
+  - "*exit"
+  - "*done"
+
+standalone: true
+
+# Web bundle configuration
+web_bundle:
+  name: "first-principles"
+  description: "Challenge every assumption and rebuild solutions from fundamental truths using multi-agent Socratic questioning"
+  author: "BMad"
+  instructions: ".bmad/core/workflows/first-principles/instructions.md"
+  agent_manifest: ".bmad/_cfg/agent-manifest.csv"
+  agent_assignments: ".bmad/core/workflows/first-principles/agent-assignments.yaml"
+  web_bundle_files:
+    - ".bmad/core/workflows/first-principles/instructions.md"
+    - ".bmad/core/workflows/first-principles/agent-assignments.yaml"
+    - ".bmad/core/workflows/first-principles/template.md"
+    - ".bmad/_cfg/agent-manifest.csv"

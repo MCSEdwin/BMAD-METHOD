@@ -1,0 +1,86 @@
+# Six Thinking Hats - Multi-Agent Workflow
+name: "six-hats"
+description: "Multi-perspective analysis using Edward de Bono's Six Thinking Hats method with multi-agent orchestration"
+author: "BMad"
+
+# Critical data sources
+agent_manifest: "{project-root}/.bmad/_cfg/agent-manifest.csv"
+hat_assignments: "{project-root}/.bmad/core/workflows/six-hats/hat-assignments.yaml"
+date: system-generated
+
+# Configuration
+hats:
+  white:
+    name: "White Hat"
+    icon: "⚪"
+    focus: "Facts, data, information"
+    mindset: "Objective, neutral, data-driven"
+
+  red:
+    name: "Red Hat"
+    icon: "🔴"
+    focus: "Emotions, feelings, intuition"
+    mindset: "Gut reactions, no justification needed"
+
+  black:
+    name: "Black Hat"
+    icon: "⚫"
+    focus: "Risks, problems, critical judgment"
+    mindset: "Devil's advocate, what could go wrong"
+
+  yellow:
+    name: "Yellow Hat"
+    icon: "🟡"
+    focus: "Benefits, optimism, opportunities"
+    mindset: "Positive thinking, best case scenarios"
+
+  green:
+    name: "Green Hat"
+    icon: "🟢"
+    focus: "Creativity, alternatives, new ideas"
+    mindset: "Brainstorming, thinking outside the box"
+
+  blue:
+    name: "Blue Hat"
+    icon: "🔵"
+    focus: "Process control, meta-thinking"
+    mindset: "Facilitator, orchestrator, synthesizer"
+
+# Hat rotation sequence
+rotation_modes:
+  sequential:
+    description: "All agents wear same hat, rotate through all 6 colors"
+    order: [white, red, black, yellow, green, blue]
+
+  parallel:
+    description: "Different agents wear different hats simultaneously"
+    rounds: 2 # Each agent wears their hat for 2 rounds
+
+  focus:
+    description: "User selects specific hats to explore"
+    hats: [] # User chooses
+
+# Template for structured output
+template: "{project-root}/.bmad/core/workflows/six-hats/template.md"
+instructions: "{project-root}/.bmad/core/workflows/six-hats/instructions.md"
+
+# Exit conditions
+exit_triggers:
+  - "*exit"
+  - "*done"
+
+standalone: true
+
+# Web bundle configuration
+web_bundle:
+  name: "six-hats"
+  description: "Multi-perspective analysis using Edward de Bono's Six Thinking Hats method with multi-agent orchestration"
+  author: "BMad"
+  instructions: ".bmad/core/workflows/six-hats/instructions.md"
+  agent_manifest: ".bmad/_cfg/agent-manifest.csv"
+  hat_assignments: ".bmad/core/workflows/six-hats/hat-assignments.yaml"
+  web_bundle_files:
+    - ".bmad/core/workflows/six-hats/instructions.md"
+    - ".bmad/core/workflows/six-hats/hat-assignments.yaml"
+    - ".bmad/core/workflows/six-hats/template.md"
+    - ".bmad/_cfg/agent-manifest.csv"
