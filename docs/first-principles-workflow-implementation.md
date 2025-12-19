@@ -3800,7 +3800,7 @@ Let's validate whether this is truly fundamental, or if it reduces to something 
 
 ---
 
-#### Round 1: Surface-Level Challenge
+### Round 1: Surface-Level Challenge
 
 **⚔️ Ember Hayes (Test Engineer)**:
 
@@ -4003,7 +4003,7 @@ We now rebuild the data storage architecture using ONLY the validated fundamenta
 
 ---
 
-#### Builder Round 1: Initial Proposals
+### Builder Round 1: Initial Proposals
 
 **🏗️ Winston Blake (Solution Architect)**:
 

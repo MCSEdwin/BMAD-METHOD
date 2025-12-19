@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const path = require('node:path');
+const packageJson = require('../../../package.json');
 
 /**
  * Configuration utility class
@@ -17,7 +18,7 @@ class Config {
     }
 
     const content = await fs.readFile(configPath, 'utf8');
-    return yaml.load(content);
+    return yaml.parse(content);
   }
 
   /**
@@ -50,7 +51,7 @@ class Config {
     const standardReplacements = {
       '{project-root}': replacements.root || '',
       '{module}': replacements.module || '',
-      '{version}': replacements.version || '5.0.0',
+      '{version}': replacements.version || packageJson.version,
       '{date}': new Date().toISOString().split('T')[0],
     };
 

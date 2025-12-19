@@ -2,7 +2,7 @@ const path = require('node:path');
 const fs = require('fs-extra');
 const os = require('node:os');
 const chalk = require('chalk');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 const { BaseIdeSetup } = require('./_base-ide');
 const { WorkflowCommandGenerator } = require('./shared/workflow-command-generator');
 const { TaskToolCommandGenerator } = require('./shared/task-tool-command-generator');
@@ -47,7 +47,7 @@ class OpenCodeSetup extends BaseIdeSetup {
       agentCount++;
     }
 
-    // Install workflow commands with flat naming: bmad-workflow-{module}-{name}.md
+    // Install workflow commands with flat naming: bmad-{module}-{workflow-name}
     const workflowGenerator = new WorkflowCommandGenerator(this.bmadFolderName);
     const { artifacts: workflowArtifacts, counts: workflowCounts } = await workflowGenerator.collectWorkflowArtifacts(bmadDir);
 
@@ -55,10 +55,10 @@ class OpenCodeSetup extends BaseIdeSetup {
     for (const artifact of workflowArtifacts) {
       if (artifact.type === 'workflow-command') {
         const commandContent = artifact.content;
-        // Flat structure: bmad-workflow-{module}-{name}.md
+        // Flat structure: bmad-{module}-{workflow-name}.md
         // artifact.relativePath is like: bmm/workflows/plan-project.md
         const workflowName = path.basename(artifact.relativePath, '.md');
-        const targetPath = path.join(commandsBaseDir, `bmad-workflow-${artifact.module}-${workflowName}.md`);
+        const targetPath = path.join(commandsBaseDir, `bmad-${artifact.module}-${workflowName}.md`);
         await this.writeFile(targetPath, commandContent);
         workflowCommandCount++;
       }
@@ -152,7 +152,7 @@ class OpenCodeSetup extends BaseIdeSetup {
 
     let frontmatter = {};
     try {
-      frontmatter = yaml.load(match[1]) || {};
+      frontmatter = yaml.parse(match[1]) || {};
     } catch {
       frontmatter = {};
     }

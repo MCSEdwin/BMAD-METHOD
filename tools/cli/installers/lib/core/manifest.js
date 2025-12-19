@@ -10,10 +10,10 @@ class Manifest {
    * @param {Array} installedFiles - List of installed files (no longer used, files tracked in files-manifest.csv)
    */
   async create(bmadDir, data, installedFiles = []) {
-    const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
-    const yaml = require('js-yaml');
+    const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
+    const yaml = require('yaml');
 
-    // Ensure _cfg directory exists
+    // Ensure _config directory exists
     await fs.ensureDir(path.dirname(manifestPath));
 
     // Structure the manifest data
@@ -28,10 +28,12 @@ class Manifest {
     };
 
     // Write YAML manifest
-    const yamlContent = yaml.dump(manifestData, {
+    // Clean the manifest data to remove any non-serializable values
+    const cleanManifestData = structuredClone(manifestData);
+
+    const yamlContent = yaml.stringify(cleanManifestData, {
       indent: 2,
-      lineWidth: -1,
-      noRefs: true,
+      lineWidth: 0,
       sortKeys: false,
     });
 
@@ -47,20 +49,21 @@ class Manifest {
    * @returns {Object|null} Manifest data or null if not found
    */
   async read(bmadDir) {
-    const yamlPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
-    const yaml = require('js-yaml');
+    const yamlPath = path.join(bmadDir, '_config', 'manifest.yaml');
+    const yaml = require('yaml');
 
     if (await fs.pathExists(yamlPath)) {
       try {
         const content = await fs.readFile(yamlPath, 'utf8');
-        const manifestData = yaml.load(content);
+        const manifestData = yaml.parse(content);
 
         // Flatten the structure for compatibility with existing code
         return {
           version: manifestData.installation?.version,
           installDate: manifestData.installation?.installDate,
           lastUpdated: manifestData.installation?.lastUpdated,
-          modules: manifestData.modules || [],
+          modules: manifestData.modules || [], // All modules (standard and custom)
+          customModules: manifestData.customModules || [], // Keep for backward compatibility
           ides: manifestData.ides || [],
         };
       } catch (error) {
@@ -78,7 +81,7 @@ class Manifest {
    * @param {Array} installedFiles - Updated list of installed files
    */
   async update(bmadDir, updates, installedFiles = null) {
-    const yaml = require('js-yaml');
+    const yaml = require('yaml');
     const manifest = (await this.read(bmadDir)) || {};
 
     // Merge updates
@@ -92,17 +95,19 @@ class Manifest {
         installDate: manifest.installDate,
         lastUpdated: manifest.lastUpdated,
       },
-      modules: manifest.modules || [],
+      modules: manifest.modules || [], // All modules (standard and custom)
       ides: manifest.ides || [],
     };
 
-    const manifestPath = path.join(bmadDir, '_cfg', 'manifest.yaml');
+    const manifestPath = path.join(bmadDir, '_config', 'manifest.yaml');
     await fs.ensureDir(path.dirname(manifestPath));
 
-    const yamlContent = yaml.dump(manifestData, {
+    // Clean the manifest data to remove any non-serializable values
+    const cleanManifestData = structuredClone(manifestData);
+
+    const yamlContent = yaml.stringify(cleanManifestData, {
       indent: 2,
-      lineWidth: -1,
-      noRefs: true,
+      lineWidth: 0,
       sortKeys: false,
     });
 
@@ -524,9 +529,9 @@ class Manifest {
 
       try {
         if (await fs.pathExists(configPath)) {
-          const yaml = require('js-yaml');
+          const yaml = require('yaml');
           const content = await fs.readFile(configPath, 'utf8');
-          configs[moduleName] = yaml.load(content);
+          configs[moduleName] = yaml.parse(content);
         }
       } catch (error) {
         console.warn(`Could not load config for module ${moduleName}:`, error.message);
@@ -534,6 +539,51 @@ class Manifest {
     }
 
     return configs;
+  }
+  /**
+   * Add a custom module to the manifest with its source path
+   * @param {string} bmadDir - Path to bmad directory
+   * @param {Object} customModule - Custom module info
+   */
+  async addCustomModule(bmadDir, customModule) {
+    const manifest = await this.read(bmadDir);
+    if (!manifest) {
+      throw new Error('No manifest found');
+    }
+
+    if (!manifest.customModules) {
+      manifest.customModules = [];
+    }
+
+    // Check if custom module already exists
+    const existingIndex = manifest.customModules.findIndex((m) => m.id === customModule.id);
+    if (existingIndex === -1) {
+      // Add new entry
+      manifest.customModules.push(customModule);
+    } else {
+      // Update existing entry
+      manifest.customModules[existingIndex] = customModule;
+    }
+
+    await this.update(bmadDir, { customModules: manifest.customModules });
+  }
+
+  /**
+   * Remove a custom module from the manifest
+   * @param {string} bmadDir - Path to bmad directory
+   * @param {string} moduleId - Module ID to remove
+   */
+  async removeCustomModule(bmadDir, moduleId) {
+    const manifest = await this.read(bmadDir);
+    if (!manifest || !manifest.customModules) {
+      return;
+    }
+
+    const index = manifest.customModules.findIndex((m) => m.id === moduleId);
+    if (index !== -1) {
+      manifest.customModules.splice(index, 1);
+      await this.update(bmadDir, { customModules: manifest.customModules });
+    }
   }
 }
 

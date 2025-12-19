@@ -17,7 +17,7 @@ const { extractInstallConfig, getDefaultValues } = require('./template-engine');
  */
 function findBmadConfig(startPath = process.cwd()) {
   // Look for common BMAD folder names
-  const possibleNames = ['.bmad', 'bmad', '.bmad-method'];
+  const possibleNames = ['_bmad'];
 
   for (const name of possibleNames) {
     const configPath = path.join(startPath, name, 'bmb', 'config.yaml');
@@ -42,11 +42,11 @@ function findBmadConfig(startPath = process.cwd()) {
  * @returns {string} Resolved path
  */
 function resolvePath(pathStr, context) {
-  return pathStr.replaceAll('{project-root}', context.projectRoot).replaceAll('{bmad-folder}', context.bmadFolder);
+  return pathStr.replaceAll('{project-root}', context.projectRoot).replaceAll('{bmad-folder}', context_bmadFolder);
 }
 
 /**
- * Discover available agents in the custom agent location
+ * Discover available agents in the custom agent location recursively
  * @param {string} searchPath - Path to search for agents
  * @returns {Array} List of agent info objects
  */
@@ -56,35 +56,58 @@ function discoverAgents(searchPath) {
   }
 
   const agents = [];
-  const entries = fs.readdirSync(searchPath, { withFileTypes: true });
 
-  for (const entry of entries) {
-    const fullPath = path.join(searchPath, entry.name);
+  // Helper function to recursively search
+  function searchDirectory(dir, relativePath = '') {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
 
-    if (entry.isFile() && entry.name.endsWith('.agent.yaml')) {
-      // Simple agent (single file)
-      agents.push({
-        type: 'simple',
-        name: entry.name.replace('.agent.yaml', ''),
-        path: fullPath,
-        yamlFile: fullPath,
-      });
-    } else if (entry.isDirectory()) {
-      // Check for agent with sidecar (folder containing .agent.yaml)
-      const yamlFiles = fs.readdirSync(fullPath).filter((f) => f.endsWith('.agent.yaml'));
-      if (yamlFiles.length === 1) {
-        const agentYamlPath = path.join(fullPath, yamlFiles[0]);
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      const agentRelativePath = relativePath ? path.join(relativePath, entry.name) : entry.name;
+
+      if (entry.isFile() && entry.name.endsWith('.agent.yaml')) {
+        // Simple agent (single file)
+        // The agent name is based on the filename
+        const agentName = entry.name.replace('.agent.yaml', '');
         agents.push({
-          type: 'expert',
-          name: entry.name,
+          type: 'simple',
+          name: agentName,
           path: fullPath,
-          yamlFile: agentYamlPath,
-          hasSidecar: true,
+          yamlFile: fullPath,
+          relativePath: agentRelativePath.replace('.agent.yaml', ''),
         });
+      } else if (entry.isDirectory()) {
+        // Check if this directory contains an .agent.yaml file
+        try {
+          const dirContents = fs.readdirSync(fullPath);
+          const yamlFiles = dirContents.filter((f) => f.endsWith('.agent.yaml'));
+
+          if (yamlFiles.length > 0) {
+            // Found .agent.yaml files in this directory
+            for (const yamlFile of yamlFiles) {
+              const agentYamlPath = path.join(fullPath, yamlFile);
+              const agentName = path.basename(yamlFile, '.agent.yaml');
+
+              agents.push({
+                type: 'expert',
+                name: agentName,
+                path: fullPath,
+                yamlFile: agentYamlPath,
+                relativePath: agentRelativePath,
+              });
+            }
+          } else {
+            // No .agent.yaml in this directory, recurse deeper
+            searchDirectory(fullPath, agentRelativePath);
+          }
+        } catch {
+          // Skip directories we can't read
+        }
       }
     }
   }
 
+  searchDirectory(searchPath);
   return agents;
 }
 
@@ -103,12 +126,15 @@ function loadAgentConfig(yamlPath) {
   // These take precedence over defaults
   const savedAnswers = agentYaml?.saved_answers || {};
 
+  const metadata = agentYaml?.agent?.metadata || {};
+
   return {
     yamlContent: content,
     agentYaml,
     installConfig,
     defaults: { ...defaults, ...savedAnswers }, // saved_answers override defaults
-    metadata: agentYaml?.agent?.metadata || {},
+    metadata,
+    hasSidecar: metadata.hasSidecar === true,
   };
 }
 
@@ -208,14 +234,16 @@ async function promptInstallQuestions(installConfig, defaults, presetAnswers = {
  * @param {Object} agentInfo - Agent discovery info
  * @param {Object} answers - User answers for install_config
  * @param {string} targetPath - Target installation directory
+ * @param {Object} options - Additional options including config
  * @returns {Object} Installation result
  */
-function installAgent(agentInfo, answers, targetPath) {
+function installAgent(agentInfo, answers, targetPath, options = {}) {
   // Compile the agent
   const { xml, metadata, processedYaml } = compileAgent(fs.readFileSync(agentInfo.yamlFile, 'utf8'), answers);
 
   // Determine target agent folder name
-  const agentFolderName = metadata.name ? metadata.name.toLowerCase().replaceAll(/\s+/g, '-') : agentInfo.name;
+  // Use the folder name from agentInfo, NOT the persona name from metadata
+  const agentFolderName = agentInfo.name;
 
   const agentTargetDir = path.join(targetPath, agentFolderName);
 
@@ -234,55 +262,9 @@ function installAgent(agentInfo, answers, targetPath) {
     agentName: metadata.name || agentInfo.name,
     targetDir: agentTargetDir,
     compiledFile: compiledPath,
-    sidecarCopied: false,
   };
 
-  // Copy sidecar files for expert agents
-  if (agentInfo.hasSidecar && agentInfo.type === 'expert') {
-    const sidecarFiles = copySidecarFiles(agentInfo.path, agentTargetDir, agentInfo.yamlFile);
-    result.sidecarCopied = true;
-    result.sidecarFiles = sidecarFiles;
-  }
-
   return result;
-}
-
-/**
- * Recursively copy sidecar files (everything except the .agent.yaml)
- * @param {string} sourceDir - Source agent directory
- * @param {string} targetDir - Target agent directory
- * @param {string} excludeYaml - The .agent.yaml file to exclude
- * @returns {Array} List of copied files
- */
-function copySidecarFiles(sourceDir, targetDir, excludeYaml) {
-  const copied = [];
-
-  function copyDir(src, dest) {
-    if (!fs.existsSync(dest)) {
-      fs.mkdirSync(dest, { recursive: true });
-    }
-
-    const entries = fs.readdirSync(src, { withFileTypes: true });
-    for (const entry of entries) {
-      const srcPath = path.join(src, entry.name);
-      const destPath = path.join(dest, entry.name);
-
-      // Skip the source YAML file
-      if (srcPath === excludeYaml) {
-        continue;
-      }
-
-      if (entry.isDirectory()) {
-        copyDir(srcPath, destPath);
-      } else {
-        fs.copyFileSync(srcPath, destPath);
-        copied.push(destPath);
-      }
-    }
-  }
-
-  copyDir(sourceDir, targetDir);
-  return copied;
 }
 
 /**
@@ -307,10 +289,10 @@ function detectBmadProject(targetPath) {
 
   // Walk up directory tree looking for BMAD installation
   while (checkPath !== root) {
-    const possibleNames = ['.bmad', 'bmad'];
+    const possibleNames = ['_bmad'];
     for (const name of possibleNames) {
       const bmadFolder = path.join(checkPath, name);
-      const cfgFolder = path.join(bmadFolder, '_cfg');
+      const cfgFolder = path.join(bmadFolder, '_config');
       const manifestFile = path.join(cfgFolder, 'agent-manifest.csv');
 
       if (fs.existsSync(manifestFile)) {
@@ -496,16 +478,16 @@ function addToManifest(manifestFile, agentData) {
 }
 
 /**
- * Save agent source YAML to _cfg/custom/agents/ for reinstallation
+ * Save agent source YAML to _config/custom/agents/ for reinstallation
  * Stores user answers in a top-level saved_answers section (cleaner than overwriting defaults)
  * @param {Object} agentInfo - Agent info (path, type, etc.)
- * @param {string} cfgFolder - Path to _cfg folder
+ * @param {string} cfgFolder - Path to _config folder
  * @param {string} agentName - Final agent name (e.g., "fred-commit-poet")
  * @param {Object} answers - User answers to save for reinstallation
  * @returns {Object} Info about saved source
  */
 function saveAgentSource(agentInfo, cfgFolder, agentName, answers = {}) {
-  // Save to _cfg/custom/agents/ instead of _cfg/agents/
+  // Save to _config/custom/agents/ instead of _config/agents/
   const customAgentsCfgDir = path.join(cfgFolder, 'custom', 'agents');
 
   if (!fs.existsSync(customAgentsCfgDir)) {
@@ -589,7 +571,7 @@ function saveAgentSource(agentInfo, cfgFolder, agentName, answers = {}) {
  */
 async function createIdeSlashCommands(projectRoot, agentName, agentPath, metadata) {
   // Read manifest.yaml to get installed IDEs
-  const manifestPath = path.join(projectRoot, '.bmad', '_cfg', 'manifest.yaml');
+  const manifestPath = path.join(projectRoot, '_bmad', '_config', 'manifest.yaml');
   let installedIdes = ['claude-code']; // Default to Claude Code if no manifest
 
   if (fs.existsSync(manifestPath)) {
@@ -720,7 +702,6 @@ module.exports = {
   loadAgentConfig,
   promptInstallQuestions,
   installAgent,
-  copySidecarFiles,
   updateAgentId,
   detectBmadProject,
   addToManifest,
